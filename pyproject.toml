@@ -1,0 +1,50 @@
+[project]
+name = "deep-research"
+version = "0.1.0"
+description = "A small deep research pipeline using the OpenAI Agents SDK."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "openai-agents",
+  "gradio",
+  # Gradio 4.x imports HfFolder; huggingface_hub 1.0 removed it.
+  "huggingface_hub>=0.20,<1.0",
+  "python-dotenv",
+  "pydantic",
+  "pydantic-settings",
+  "sendgrid",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+  "mypy",
+]
+
+[project.scripts]
+deep-research = "deep_research.ui.gradio_app:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+no_implicit_optional = true
