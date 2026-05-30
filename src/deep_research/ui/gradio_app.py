@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Any
 
 import gradio as gr
 from dotenv import load_dotenv
@@ -7,18 +6,6 @@ from dotenv import load_dotenv
 from deep_research.research_manager import ResearchManager
 
 APP_THEME = gr.themes.Default(primary_hue="sky")
-
-
-def _wrap_launch_with_defaults(ui: gr.Blocks) -> gr.Blocks:
-    """Inject Gradio 6 launch defaults (e.g. theme) for HF Spaces and local runs."""
-    original_launch = ui.launch
-
-    def launch(*args: Any, **kwargs: Any):
-        kwargs.setdefault("theme", APP_THEME)
-        return original_launch(*args, **kwargs)
-
-    ui.launch = launch  # type: ignore[method-assign]
-    return ui
 
 
 def build_research_ui() -> gr.Blocks:
@@ -46,13 +33,13 @@ def build_research_ui() -> gr.Blocks:
         run_button.click(fn=run, inputs=inputs, outputs=report)
         query_textbox.submit(fn=run, inputs=inputs, outputs=report)
 
-    return _wrap_launch_with_defaults(ui)
+    return ui
 
 
 def main() -> None:
     if Path(".env").is_file():
         load_dotenv(override=True)
-    build_research_ui().launch(inbrowser=True)
+    build_research_ui().launch(inbrowser=True, theme=APP_THEME)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ Exposes a Gradio `demo` object for the Space runtime. Secrets (e.g. OPENAI_API_K
 must be configured as Space secrets — never commit them to the repo.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -14,7 +15,7 @@ if SRC.is_dir() and str(SRC) not in sys.path:
 
 from dotenv import load_dotenv
 
-from deep_research.ui.gradio_app import build_research_ui
+from deep_research.ui.gradio_app import APP_THEME, build_research_ui
 
 # Local dev only: load .env if present. On Hugging Face, secrets are injected as env vars.
 # override=False ensures Space secrets are never overwritten by a stray .env file.
@@ -22,3 +23,12 @@ if Path(".env").is_file():
     load_dotenv(override=False)
 
 demo = build_research_ui()
+
+# Hugging Face runs `python app.py` directly. Without launch(), the process exits
+# immediately (exit code 0) and the Space shows "application does not seem to be initialized".
+if __name__ == "__main__":
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 7860)),
+        theme=APP_THEME,
+    )
