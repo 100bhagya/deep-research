@@ -1,9 +1,24 @@
 from pathlib import Path
+from typing import Any
 
 import gradio as gr
 from dotenv import load_dotenv
 
 from deep_research.research_manager import ResearchManager
+
+APP_THEME = gr.themes.Default(primary_hue="sky")
+
+
+def _wrap_launch_with_defaults(ui: gr.Blocks) -> gr.Blocks:
+    """Inject Gradio 6 launch defaults (e.g. theme) for HF Spaces and local runs."""
+    original_launch = ui.launch
+
+    def launch(*args: Any, **kwargs: Any):
+        kwargs.setdefault("theme", APP_THEME)
+        return original_launch(*args, **kwargs)
+
+    ui.launch = launch  # type: ignore[method-assign]
+    return ui
 
 
 def build_research_ui() -> gr.Blocks:
@@ -16,7 +31,7 @@ def build_research_ui() -> gr.Blocks:
         except ValueError as exc:
             yield f"**Error:** {exc}"
 
-    with gr.Blocks(theme=gr.themes.Default(primary_hue="sky")) as ui:
+    with gr.Blocks() as ui:
         gr.Markdown("# Deep Research")
         query_textbox = gr.Textbox(label="What topic would you like to research?")
         email_textbox = gr.Textbox(
@@ -31,7 +46,7 @@ def build_research_ui() -> gr.Blocks:
         run_button.click(fn=run, inputs=inputs, outputs=report)
         query_textbox.submit(fn=run, inputs=inputs, outputs=report)
 
-    return ui
+    return _wrap_launch_with_defaults(ui)
 
 
 def main() -> None:
