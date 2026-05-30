@@ -28,8 +28,6 @@ Add these under **Settings → Repository secrets** in the Space UI. **Never com
 | `SENDGRID_API_KEY` | No | SendGrid API key (email is skipped if unset) |
 | `SENDGRID_FROM_EMAIL` | No | Sender address (required with SendGrid) |
 
-Recipients are entered in the app UI. `SENDGRID_TO_EMAIL` in `.env` is an optional fallback for local/CLI use only.
-
 For local development, copy `.env.example` to `.env` and fill in values there instead.
 
 ### GitHub Actions (automatic deploy)
@@ -54,13 +52,13 @@ Both environments target **Python 3.12** and the same dependency set:
 | Secrets | `.env` (gitignored) | Space repository secrets |
 | Virtual env | `.venv/` (gitignored, local only) | Built by HF from `requirements.txt` |
 
-The deploy workflow runs `uv sync --frozen` and imports `app.demo` on Python 3.12 before uploading. It then runs `uv export` so Hugging Face always installs the same locked versions as your local `uv.lock`.
+The deploy workflow runs `uv sync --frozen` and imports `app.demo` on Python 3.12 before uploading. It then runs `uv export --no-emit-project` so Hugging Face gets pinned third-party deps only (no `-e .`, which breaks HF's Docker build). Application code is loaded from `src/` via `app.py`.
 
 When you add or change dependencies locally:
 
 ```bash
 uv add some-package          # updates pyproject.toml + uv.lock
-uv export --no-dev --no-hashes -o requirements.txt   # optional: commit for visibility
+uv export --no-dev --no-hashes --no-emit-project -o requirements.txt   # optional: commit for visibility
 git add pyproject.toml uv.lock requirements.txt
 git commit -m "Update dependencies"
 ```
@@ -95,7 +93,7 @@ uv sync
 Create a `.env` file from `.env.example` and set:
 
 - **Required**: `OPENAI_API_KEY`
-- **Optional (email)**: `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL` (recipient comes from the UI, or `SENDGRID_TO_EMAIL` as a CLI fallback)
+- **Optional (email)**: `SENDGRID_API_KEY`, `SENDGRID_FROM_EMAIL` (recipient comes from the UI, or 
 
 ### Run
 
@@ -130,4 +128,3 @@ Dependencies may not match `uv.lock` exactly.
 ## Notes
 
 - Tracing: the app prints and streams a trace URL from the OpenAI Agents SDK.
-- Email: enter a recipient in the UI, or set `SENDGRID_TO_EMAIL` for non-UI runs. Email is skipped if SendGrid is not configured or no recipient is provided.
