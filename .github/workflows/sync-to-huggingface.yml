@@ -1,0 +1,35 @@
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify install on Python 3.12 (same as Hugging Face)
+        run: |
+          uv sync --frozen
+          uv run python -c "from app import demo; print('demo:', type(demo).__name__)"
+
+      - name: Export requirements.txt from uv.lock
+        run: uv export --no-dev --no-hashes -o requirements.txt
+
+      - name: Sync to Hugging Face Hub
+        uses: huggingface/hub-sync@v0.1.0
+        with:
+          github_repo_id: ${{ github.repository }}
+          huggingface_repo_id: SaubhagyaG/Deep-Research
+          hf_token: ${{ secrets.HF_TOKEN }}
+          repo_type: space
+          space_sdk: gradio
