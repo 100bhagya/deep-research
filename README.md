@@ -48,22 +48,20 @@ Both environments target **Python 3.12** and the same dependency set:
 | | Local | Hugging Face Space |
 |---|--------|---------------------|
 | Python | 3.12 (`.python-version`, `pyproject.toml`) | 3.12 (`python_version` in README frontmatter) |
-| Dependencies | `uv.lock` via `uv sync` | `requirements.txt` generated from `uv.lock` on deploy |
+| Dependencies | `uv.lock` via `uv sync` | `requirements.txt` (direct deps only; Gradio installed by HF) |
 | Secrets | `.env` (gitignored) | Space repository secrets |
 | Virtual env | `.venv/` (gitignored, local only) | Built by HF from `requirements.txt` |
 
-The deploy workflow runs `uv sync --frozen` and imports `app.demo` on Python 3.12 before uploading. It then runs `uv export --no-emit-project` so Hugging Face gets pinned third-party deps only (no `-e .`, which breaks HF's Docker build). Application code is loaded from `src/` via `app.py`.
+The deploy workflow runs `uv sync --frozen` and imports `app.demo` on Python 3.12 before uploading. Hugging Face installs `gradio[oauth,mcp]` itself, so `requirements.txt` lists only direct app dependencies (no Gradio, no full transitive lock). `pydantic` is capped at `<=2.12.5` to match Gradio's MCP extra.
 
 When you add or change dependencies locally:
 
 ```bash
 uv add some-package          # updates pyproject.toml + uv.lock
-uv export --no-dev --no-hashes --no-emit-project -o requirements.txt   # optional: commit for visibility
+# Update requirements.txt if you added a new direct dependency for Hugging Face
 git add pyproject.toml uv.lock requirements.txt
 git commit -m "Update dependencies"
 ```
-
-You do not need to commit an updated `requirements.txt` for Hugging Face to get the right versions — the workflow regenerates it on every deploy. Committing it is still useful so PRs show dependency changes clearly.
 
 ### Manual deploy
 

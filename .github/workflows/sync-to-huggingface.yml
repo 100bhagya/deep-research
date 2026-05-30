@@ -22,9 +22,6 @@ jobs:
           uv sync --frozen
           uv run python -c "from app import demo; print('demo:', type(demo).__name__)"
 
-      - name: Export requirements.txt from uv.lock
-        run: uv export --no-dev --no-hashes --no-emit-project -o requirements.txt
-
       - name: Sync to Hugging Face Hub
         uses: huggingface/hub-sync@v0.1.0
         with:
